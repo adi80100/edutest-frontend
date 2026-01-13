@@ -157,6 +157,7 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
+            
 
           {/* Student Routes */}
           <Route path="student" element={<StudentDashboard />} />
@@ -167,6 +168,9 @@ const AppRoutes = () => {
 
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+        
+
       </Routes>
       
       <ToastContainer

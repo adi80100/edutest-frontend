@@ -21,7 +21,7 @@
 }
 
 .dashboard-header p {
-  color: #718096;
+  color: #2c6ec4;
   font-size: 1.1rem;
   margin: 0;
 }
@@ -327,7 +327,7 @@
 /* Dark Mode Support (optional) */
 @media (prefers-color-scheme: dark) {
   .dashboard-container {
-    background: #1a202c;
+    background: #a8c3dd;
     color: #e2e8f0;
   }
   
