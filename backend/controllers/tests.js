@@ -39,15 +39,20 @@ exports.getPublishedTests = async (req, res, next) => {
   try {
     const currentDate = new Date();
     
+    // Ensure both schedule and expiry windows are respected
     const tests = await Test.find({
       isPublished: true,
-      $or: [
-        { scheduledAt: { $lte: currentDate } },
-        { scheduledAt: null }
-      ],
-      $or: [
-        { expiresAt: { $gte: currentDate } },
-        { expiresAt: null }
+      $and: [
+        { $or: [
+            { scheduledAt: { $lte: currentDate } },
+            { scheduledAt: null }
+          ]
+        },
+        { $or: [
+            { expiresAt: { $gte: currentDate } },
+            { expiresAt: null }
+          ]
+        }
       ]
     })
     .populate('createdBy', 'name')
@@ -222,7 +227,7 @@ exports.deleteTest = async (req, res, next) => {
     // Delete associated results
     await Result.deleteMany({ test: req.params.id });
 
-    await test.remove();
+    await test.deleteOne();
 
     res.status(200).json({
       success: true,
@@ -319,7 +324,6 @@ exports.startTest = async (req, res, next) => {
       return next(new ErrorResponse('Test is not available', 403));
     }
 
-    // Check if test is scheduled and available
     const now = new Date();
     if (test.scheduledAt && test.scheduledAt > now) {
       return next(new ErrorResponse('Test is not yet available', 403));
@@ -329,17 +333,7 @@ exports.startTest = async (req, res, next) => {
       return next(new ErrorResponse('Test has expired', 403));
     }
 
-    // Check how many attempts the student has made
-    const existingAttempts = await Result.countDocuments({
-      student: req.user.id,
-      test: req.params.id
-    });
-
-    if (existingAttempts >= test.allowedAttempts) {
-      return next(new ErrorResponse('Maximum attempts reached', 403));
-    }
-
-    // Check if there's an in-progress attempt
+    // ✅ 1️⃣ CHECK IN-PROGRESS FIRST (IMPORTANT)
     const inProgressAttempt = await Result.findOne({
       student: req.user.id,
       test: req.params.id,
@@ -353,12 +347,24 @@ exports.startTest = async (req, res, next) => {
       });
     }
 
-    // Create new result entry
+    // ✅ 2️⃣ COUNT ONLY SUBMITTED ATTEMPTS
+    const completedAttempts = await Result.countDocuments({
+      student: req.user.id,
+      test: req.params.id,
+      status: 'submitted'
+    });
+
+    if (completedAttempts >= test.allowedAttempts) {
+      return next(new ErrorResponse('Maximum attempts reached', 403));
+    }
+
+    // ✅ 3️⃣ CREATE NEW ATTEMPT
     const result = await Result.create({
       student: req.user.id,
       test: req.params.id,
       totalPoints: test.totalPoints,
-      attemptNumber: existingAttempts + 1,
+      attemptNumber: completedAttempts + 1,
+      status: 'in-progress',
       ipAddress: req.ip,
       userAgent: req.headers['user-agent']
     });
@@ -371,6 +377,7 @@ exports.startTest = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // @desc    Submit test
 // @route   POST /api/tests/:id/submit

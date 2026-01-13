@@ -125,6 +125,34 @@ TestSchema.pre('save', function(next) {
   next();
 });
 
+// Keep totalPoints and updatedAt in sync on findOneAndUpdate
+TestSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate() || {};
+  const $set = update.$set || {};
+
+  // Always bump updatedAt
+  const now = Date.now();
+  if (update.$set) {
+    update.$set.updatedAt = now;
+  } else {
+    update.updatedAt = now;
+  }
+
+  // If questions are provided in the update, recalc totalPoints
+  const questions = $set.questions !== undefined ? $set.questions : update.questions;
+  if (Array.isArray(questions)) {
+    const total = questions.reduce((sum, q) => sum + (q.points || 0), 0);
+    if (update.$set) {
+      update.$set.totalPoints = total;
+    } else {
+      update.totalPoints = total;
+    }
+  }
+
+  this.setUpdate(update);
+  next();
+});
+
 // Add indexes for better performance
 TestSchema.index({ createdBy: 1 });
 TestSchema.index({ subject: 1 });

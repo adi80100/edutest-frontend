@@ -107,6 +107,38 @@ ResultSchema.pre('save', function(next) {
   next();
 });
 
+// Keep percentage in sync when using findOneAndUpdate (e.g., manual grading)
+ResultSchema.pre('findOneAndUpdate', async function(next) {
+  try {
+    const update = this.getUpdate() || {};
+    const $set = update.$set || {};
+
+    const score = $set.score !== undefined ? $set.score : update.score;
+    let totalPoints = $set.totalPoints !== undefined ? $set.totalPoints : update.totalPoints;
+
+    if (score !== undefined) {
+      if (totalPoints === undefined) {
+        const doc = await this.model.findOne(this.getQuery()).select('totalPoints');
+        totalPoints = doc ? doc.totalPoints : undefined;
+      }
+
+      if (typeof totalPoints === 'number' && totalPoints > 0) {
+        const percentage = Math.round((score / totalPoints) * 100);
+        // Merge percentage back into update
+        if (update.$set) {
+          update.$set.percentage = percentage;
+        } else {
+          update.percentage = percentage;
+        }
+        this.setUpdate(update);
+      }
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Add compound index to prevent duplicate submissions
 ResultSchema.index({ student: 1, test: 1, attemptNumber: 1 }, { unique: true });
 

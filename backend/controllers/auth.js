@@ -7,13 +7,12 @@ const ErrorResponse = require('../utils/errorResponse');
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return next(new ErrorResponse(errors.array()[0].msg, 400));
     }
 
-    const { name, email, password, role, studentId } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -21,24 +20,18 @@ exports.register = async (req, res, next) => {
       return next(new ErrorResponse('User with this email already exists', 400));
     }
 
-    // Check if studentId already exists for students
-    if (role === 'student' && studentId) {
-      const existingStudent = await User.findOne({ studentId });
-      if (existingStudent) {
-        return next(new ErrorResponse('Student ID already exists', 400));
-      }
-    }
+    // ✅ AUTO-GENERATE studentId
+    const studentId = "STU" + Date.now();
 
-    // Create user
+    // ✅ CREATE STUDENT USER (NO role variable used)
     const user = await User.create({
       name,
       email,
       password,
-      role,
-      studentId: role === 'student' ? studentId : undefined
+      role: "student",
+      studentId
     });
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
@@ -47,6 +40,7 @@ exports.register = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // @desc    Login user
 // @route   POST /api/auth/login

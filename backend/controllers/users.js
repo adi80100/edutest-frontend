@@ -238,7 +238,7 @@ exports.deleteUser = async (req, res, next) => {
       return next(new ErrorResponse('Cannot delete your own account', 400));
     }
 
-    await user.remove();
+    await user.deleteOne();
 
     res.status(200).json({
       success: true,
