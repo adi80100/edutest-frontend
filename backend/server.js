@@ -53,6 +53,11 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'EduTest API is running!', status: 'healthy' });
 });
 
+// to check "/"
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
 // Error handler middleware
 app.use(require('./middleware/errorHandler'));
 
