@@ -56,6 +56,7 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
+    
     const initAuth = async () => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
