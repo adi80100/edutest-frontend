@@ -15,20 +15,15 @@ connectDB();
 const app = express();
 
 
-const CLIENT_URLS = [
-  process.env.CLIENT_URL,
-  'http://localhost:5173',
-].filter(Boolean);
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || CLIENT_URLS.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS policy: origin ${origin} not allowed`));
-  },
+  origin: true,
   credentials: true,
 }));
 
-
+app.use((req, res, next) => {
+  console.log(`[CORS DEBUG] origin=${req.headers.origin} path=${req.path}`);
+  next();
+});
 
 // Security middleware
 app.use(helmet());
