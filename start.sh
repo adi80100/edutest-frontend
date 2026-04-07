@@ -25,15 +25,15 @@ sleep 3
 
 # Start Frontend
 echo "🎨 Starting Frontend Server..."
-cd ../frontend
-npm start &
+cd ../edutest-frontend-vite
+npm run dev &
 FRONTEND_PID=$!
 
 echo ""
 echo "✅ Both servers are starting up!"
 echo ""
 echo "📊 Backend running on: http://localhost:5001"
-echo "🎨 Frontend running on: http://localhost:3000"
+echo "🎨 Frontend running on: http://localhost:5173"
 echo ""
 echo "👤 Demo Accounts:"
 echo "📧 Admin: admin@edutest.com / admin123"

@@ -114,25 +114,11 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      dispatch({ type: 'AUTH_START' });
+      await apiService.register(userData);
       
-      const response = await apiService.register(userData);
-      
-      const { token, data: user } = response;
-
-      // Store in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: { user, token },
-      });
-
-      toast.success('Registration successful!');
+      toast.success('Registration successful! Please log in.');
       return true;
     } catch (error) {
-      dispatch({ type: 'AUTH_FAILURE' });
       const message = error.response?.data?.error || 'Registration failed';
       toast.error(message);
       return false;
