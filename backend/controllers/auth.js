@@ -12,7 +12,7 @@ exports.register = async (req, res, next) => {
       return next(new ErrorResponse(errors.array()[0].msg, 400));
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password ,role} = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -28,7 +28,7 @@ exports.register = async (req, res, next) => {
       name,
       email,
       password,
-      role: "student",
+      role: role||"student",
       studentId
     });
 
